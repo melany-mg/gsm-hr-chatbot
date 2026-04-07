@@ -1,5 +1,5 @@
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_community.vectorstores import Qdrant as QdrantVectorStore
+from langchain_qdrant import QdrantVectorStore
 from langchain_huggingface import HuggingFaceEmbeddings
 from qdrant_client import QdrantClient
 
