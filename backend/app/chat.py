@@ -60,7 +60,7 @@ def retrieve_chunks(
     store = QdrantVectorStore(
         client=client,
         collection_name=settings.qdrant_collection,
-        embeddings=embeddings,
+        embedding=embeddings,
     )
     return store.similarity_search_with_score(query, k=5)
 
