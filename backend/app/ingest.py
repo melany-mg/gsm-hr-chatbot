@@ -58,9 +58,11 @@ def run_ingest() -> None:
                     id=str(uuid.uuid4()),
                     vector=vector,
                     payload={
-                        "text": chunk,
-                        "source": page_data["source"],
-                        "page": page_data["page"],
+                        "page_content": chunk,
+                        "metadata": {
+                            "source": page_data["source"],
+                            "page": page_data["page"],
+                        },
                     },
                 ))
 
