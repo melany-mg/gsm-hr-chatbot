@@ -66,8 +66,8 @@ def test_ingest_upserts_points(tmp_path):
     upsert_call = mock_client.upsert.call_args
     points = upsert_call.kwargs["points"]
     assert len(points) >= 1
-    assert points[0].payload["source"] == "test.pdf"
-    assert points[0].payload["page"] == 2
+    assert points[0].payload["metadata"]["source"] == "test.pdf"
+    assert points[0].payload["metadata"]["page"] == 2
 
 
 def test_ingest_skips_unsupported_files(tmp_path):
