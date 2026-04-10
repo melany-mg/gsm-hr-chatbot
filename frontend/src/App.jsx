@@ -46,7 +46,7 @@ export default function App() {
         <h1>GSM HR Assistant</h1>
         <LanguageDropdown value={language} onChange={setLanguage} />
       </header>
-      <ChatWindow messages={messages} />
+      <ChatWindow messages={messages} loading={loading} />
       <InputBar onSend={handleSend} disabled={loading} />
     </div>
   )
