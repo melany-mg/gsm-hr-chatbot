@@ -1,7 +1,9 @@
+import ReactMarkdown from 'react-markdown'
+
 export default function MessageBubble({ role, content, citations }) {
   return (
     <div className={`message ${role}`}>
-      <p>{content}</p>
+      <ReactMarkdown>{content}</ReactMarkdown>
       {citations && citations.length > 0 && (
         <p className="citations">
           {'Sources: '}

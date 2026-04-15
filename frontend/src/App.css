@@ -68,6 +68,24 @@ header select {
   color: #333;
 }
 
+.message ul,
+.message ol {
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.message li {
+  margin-bottom: 0.2rem;
+}
+
+.message p {
+  margin-bottom: 0.4rem;
+}
+
+.message p:last-child {
+  margin-bottom: 0;
+}
+
 .citations {
   margin-top: 0.5rem;
   font-size: 0.78rem;
