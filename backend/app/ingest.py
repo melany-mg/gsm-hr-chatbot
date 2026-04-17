@@ -4,6 +4,8 @@ Indexes HR documents into Qdrant. Run from the project root:
     python backend/app/ingest.py
 
 Wipes and rebuilds the collection on every run.
+
+docker compose exec -e QDRANT_EXTERNAL_HOST=qdrant backend python app/ingest.py 2>&1 | tail -5
 """
 import sys
 from pathlib import Path
