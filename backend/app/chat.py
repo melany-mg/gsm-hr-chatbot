@@ -62,7 +62,7 @@ def retrieve_chunks(
         collection_name=settings.qdrant_collection,
         embedding=embeddings,
     )
-    return store.similarity_search_with_score(query, k=8)
+    return store.similarity_search_with_score(query, k=12)
 
 
 def answer_question(
