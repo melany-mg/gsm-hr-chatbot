@@ -9,7 +9,7 @@ SIMILARITY_THRESHOLD = 0.3
 
 HR_REDIRECT = (
     "I'm sorry, I don't have information about that in the HR documents. "
-    "Please contact HR directly: [HR_NAME], [HR_EMAIL], [HR_PHONE]."
+    "Please contact the HR department directly for assistance."
 )
 
 LANGUAGE_NAMES = {
