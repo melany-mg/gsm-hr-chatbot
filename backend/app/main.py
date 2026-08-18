@@ -1,9 +1,23 @@
+import logging
+from datetime import datetime
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.config import get_settings
 from app.chat import answer_question, build_embeddings, get_qdrant_client
+
+LOG_PATH = Path("/app/logs/usage.log")
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+logging.basicConfig(
+    filename=LOG_PATH,
+    level=logging.INFO,
+    format="%(message)s",
+)
+usage_logger = logging.getLogger("usage")
 
 app = FastAPI(title="GSM HR Chatbot API")
 
@@ -68,5 +82,13 @@ def chat(req: ChatRequest):
         settings=_settings,
         embeddings=get_embeddings(),
         client=get_client(),
+    )
+    outcome = "redirected" if not result["citations"] else "answered"
+    usage_logger.info(
+        "%s | language=%s | outcome=%s | citations=%d",
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        req.language,
+        outcome,
+        len(result["citations"]),
     )
     return ChatResponse(**result)
