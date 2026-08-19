@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import LanguageDropdown from './components/LanguageDropdown'
 import ChatWindow from './components/ChatWindow'
 import InputBar from './components/InputBar'
@@ -9,6 +9,7 @@ export default function App() {
   const [language, setLanguage] = useState('en')
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
+  const sessionId = useRef(crypto.randomUUID())
 
   async function handleSend(text) {
     const newUserMsg = { role: 'user', content: text, citations: [] }
@@ -21,7 +22,7 @@ export default function App() {
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.content,
       }))
-      const result = await sendMessage({ message: text, language, history })
+      const result = await sendMessage({ message: text, language, history, sessionId: sessionId.current })
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: result.answer, citations: result.citations },

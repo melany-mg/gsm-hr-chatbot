@@ -25,7 +25,7 @@ usage_logger = logging.getLogger("usage")
 
 if not CSV_PATH.exists():
     with open(CSV_PATH, "w", newline="") as f:
-        csv.writer(f).writerow(["Timestamp", "Language", "Question", "Answer", "Outcome", "Citations"])
+        csv.writer(f).writerow(["Timestamp", "Session ID", "Language", "Question", "Answer", "Outcome", "Citations"])
 
 app = FastAPI(title="GSM HR Chatbot API")
 
@@ -64,6 +64,7 @@ class ChatRequest(BaseModel):
     message: str
     language: str = "en"
     history: list[HistoryItem] = []
+    session_id: str = ""
 
 
 class Citation(BaseModel):
@@ -101,5 +102,5 @@ def chat(req: ChatRequest):
         len(result["citations"]),
     )
     with open(CSV_PATH, "a", newline="") as f:
-        csv.writer(f).writerow([timestamp, req.language, req.message, result["answer"], outcome, len(result["citations"])])
+        csv.writer(f).writerow([timestamp, req.session_id, req.language, req.message, result["answer"], outcome, len(result["citations"])])
     return ChatResponse(**result)

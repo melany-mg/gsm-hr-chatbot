@@ -1,8 +1,8 @@
-export async function sendMessage({ message, language, history }) {
+export async function sendMessage({ message, language, history, sessionId }) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, language, history }),
+    body: JSON.stringify({ message, language, history, session_id: sessionId }),
   })
   if (!response.ok) {
     throw new Error(`Server error: ${response.status}`)
