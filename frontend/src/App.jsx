@@ -9,7 +9,11 @@ export default function App() {
   const [language, setLanguage] = useState('en')
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
-  const sessionId = useRef(crypto.randomUUID())
+  const sessionId = useRef(
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2) + Date.now().toString(36)
+  )
 
   async function handleSend(text) {
     const newUserMsg = { role: 'user', content: text, citations: [] }
