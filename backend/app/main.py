@@ -23,9 +23,28 @@ logging.basicConfig(
 )
 usage_logger = logging.getLogger("usage")
 
-if not CSV_PATH.exists():
-    with open(CSV_PATH, "w", newline="") as f:
-        csv.writer(f).writerow(["Timestamp", "Session ID", "Language", "Question", "Answer", "Outcome", "Citations"])
+CSV_COLUMNS = ["Timestamp", "Session ID", "Language", "Question", "Answer", "Outcome", "Citations"]
+
+
+def _migrate_csv() -> None:
+    if not CSV_PATH.exists():
+        with open(CSV_PATH, "w", newline="") as f:
+            csv.writer(f).writerow(CSV_COLUMNS)
+        return
+    with open(CSV_PATH, "r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        existing_cols = list(reader.fieldnames or [])
+        rows = list(reader)
+    if existing_cols == CSV_COLUMNS:
+        return
+    with open(CSV_PATH, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({col: row.get(col, "") for col in CSV_COLUMNS})
+
+
+_migrate_csv()
 
 app = FastAPI(title="GSM HR Chatbot API")
 
@@ -102,9 +121,9 @@ def chat(req: ChatRequest):
         len(result["citations"]),
     )
     write_header = not CSV_PATH.exists()
-    with open(CSV_PATH, "a", newline="") as f:
+    with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         if write_header:
-            writer.writerow(["Timestamp", "Session ID", "Language", "Question", "Answer", "Outcome", "Citations"])
+            writer.writerow(CSV_COLUMNS)
         writer.writerow([timestamp, req.session_id, req.language, req.message, result["answer"], outcome, len(result["citations"])])
     return ChatResponse(**result)
