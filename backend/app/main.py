@@ -1,3 +1,4 @@
+import csv
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -9,8 +10,11 @@ from pydantic import BaseModel
 from app.config import get_settings
 from app.chat import answer_question, build_embeddings, get_qdrant_client
 
-LOG_PATH = Path("/app/logs/usage.log")
-LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+LOGS_DIR = Path("/app/logs")
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+LOG_PATH = LOGS_DIR / "usage.log"
+CSV_PATH = LOGS_DIR / "usage.csv"
 
 logging.basicConfig(
     filename=LOG_PATH,
@@ -18,6 +22,10 @@ logging.basicConfig(
     format="%(message)s",
 )
 usage_logger = logging.getLogger("usage")
+
+if not CSV_PATH.exists():
+    with open(CSV_PATH, "w", newline="") as f:
+        csv.writer(f).writerow(["Timestamp", "Language", "Outcome", "Citations"])
 
 app = FastAPI(title="GSM HR Chatbot API")
 
@@ -84,11 +92,14 @@ def chat(req: ChatRequest):
         client=get_client(),
     )
     outcome = "redirected" if not result["citations"] else "answered"
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     usage_logger.info(
         "%s | language=%s | outcome=%s | citations=%d",
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        timestamp,
         req.language,
         outcome,
         len(result["citations"]),
     )
+    with open(CSV_PATH, "a", newline="") as f:
+        csv.writer(f).writerow([timestamp, req.language, outcome, len(result["citations"])])
     return ChatResponse(**result)
