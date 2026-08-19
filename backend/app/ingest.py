@@ -49,6 +49,8 @@ def run_ingest() -> None:
             pages = list(extract_from_pdf(file_path))
         elif suffix == ".docx":
             pages = list(extract_from_docx(file_path))
+        elif suffix == ".txt":
+            pages = [{"text": file_path.read_text(encoding="utf-8"), "source": file_path.name, "page": 1}]
         else:
             continue
 
