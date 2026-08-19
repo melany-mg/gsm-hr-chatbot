@@ -101,6 +101,10 @@ def chat(req: ChatRequest):
         outcome,
         len(result["citations"]),
     )
+    write_header = not CSV_PATH.exists()
     with open(CSV_PATH, "a", newline="") as f:
-        csv.writer(f).writerow([timestamp, req.session_id, req.language, req.message, result["answer"], outcome, len(result["citations"])])
+        writer = csv.writer(f)
+        if write_header:
+            writer.writerow(["Timestamp", "Session ID", "Language", "Question", "Answer", "Outcome", "Citations"])
+        writer.writerow([timestamp, req.session_id, req.language, req.message, result["answer"], outcome, len(result["citations"])])
     return ChatResponse(**result)
