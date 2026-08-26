@@ -58,6 +58,56 @@ def login(req: LoginRequest):
     return {"token": _token}
 
 
+def classify_topic(question: str) -> str:
+    q = question.lower()
+    for topic, keywords in TOPICS[:-1]:  # skip Other (catch-all)
+        if any(kw in q for kw in keywords):
+            return topic
+    return "Other"
+
+
+def _read_csv_rows() -> list[dict]:
+    if not CSV_PATH.exists():
+        return []
+    with open(CSV_PATH, "r", newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
 @router.get("/logs")
-def get_logs(auth: None = Depends(require_auth)):
-    return {"status": "ok"}
+def get_logs(_: None = Depends(require_auth)):
+    return _read_csv_rows()
+
+
+@router.get("/analytics")
+def get_analytics(_: None = Depends(require_auth)):
+    rows = _read_csv_rows()
+    if not rows:
+        topic_list = [{"topic": t, "count": 0} for t, _ in TOPICS]
+        return {"totals": {"total": 0, "sessions": 0, "answered": 0, "redirected": 0}, "daily": [], "topics": topic_list}
+
+    total = len(rows)
+    sessions = len(set(r.get("Session ID", "") for r in rows if r.get("Session ID")))
+    answered = sum(1 for r in rows if r.get("Outcome") == "answered")
+    redirected = total - answered
+
+    daily: dict[str, int] = defaultdict(int)
+    for r in rows:
+        ts = r.get("Timestamp", "")
+        if ts:
+            daily[ts[:10]] += 1
+
+    today = date.today()
+    daily_list = [
+        {"date": (today - timedelta(days=i)).isoformat(), "count": daily.get((today - timedelta(days=i)).isoformat(), 0)}
+        for i in range(29, -1, -1)
+    ]
+
+    topic_counts: dict[str, int] = defaultdict(int)
+    for r in rows:
+        topic_counts[classify_topic(r.get("Question", ""))] += 1
+
+    return {
+        "totals": {"total": total, "sessions": sessions, "answered": answered, "redirected": redirected},
+        "daily": daily_list,
+        "topics": [{"topic": t, "count": topic_counts.get(t, 0)} for t, _ in TOPICS],
+    }
