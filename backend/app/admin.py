@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 _token: str = secrets.token_hex(24)  # 48-char hex, regenerated on every backend restart
 _ingest_status: dict = {"state": "idle", "last_run": None, "error": None}
+_ingest_lock = threading.Lock()
 
 DOCUMENTS_DIR = Path("/app/documents")
 CSV_PATH = Path("/app/logs/usage.csv")
@@ -56,6 +57,8 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 def login(req: LoginRequest):
     settings = get_settings()
+    if not settings.admin_password:
+        raise HTTPException(status_code=503, detail="Admin portal not configured.")
     if req.password != settings.admin_password:
         raise HTTPException(status_code=401, detail="Invalid password")
     return {"token": _token}
@@ -138,12 +141,20 @@ async def upload_document(
 ):
     if Path(file.filename).suffix.lower() not in ALLOWED_SUFFIXES:
         raise HTTPException(status_code=400, detail="Only PDF, DOCX, and TXT files are allowed.")
-    content = await file.read()
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=400, detail="File exceeds 20 MB limit.")
+    chunks = []
+    size = 0
+    while True:
+        chunk = await file.read(65536)
+        if not chunk:
+            break
+        size += len(chunk)
+        if size > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=400, detail="File exceeds 20 MB limit.")
+        chunks.append(chunk)
+    content = b"".join(chunks)
     dest = DOCUMENTS_DIR / Path(file.filename).name
     dest.write_bytes(content)
-    return {"filename": dest.name, "size": len(content)}
+    return {"filename": dest.name, "size": size}
 
 
 @router.delete("/documents/{filename}")
@@ -165,24 +176,24 @@ def delete_document(filename: str, _: None = Depends(require_auth)):
 
 def _run_ingest_background() -> None:
     global _ingest_status
-    _ingest_status = {"state": "running", "last_run": None, "error": None}
     try:
         from app.ingest import run_ingest
         settings = get_settings()
         run_ingest(qdrant_host=settings.qdrant_host)
-        _ingest_status = {
-            "state": "done",
-            "last_run": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "error": None,
-        }
+        with _ingest_lock:
+            _ingest_status = {"state": "done", "last_run": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "error": None}
     except Exception as exc:
-        _ingest_status = {"state": "error", "last_run": None, "error": str(exc)}
+        with _ingest_lock:
+            _ingest_status = {"state": "error", "last_run": None, "error": str(exc)}
 
 
 @router.post("/ingest")
 def trigger_ingest(background_tasks: BackgroundTasks, _: None = Depends(require_auth)):
-    if _ingest_status["state"] == "running":
-        raise HTTPException(status_code=409, detail="Ingest already running.")
+    global _ingest_status
+    with _ingest_lock:
+        if _ingest_status["state"] == "running":
+            raise HTTPException(status_code=409, detail="Ingest already running.")
+        _ingest_status = {"state": "running", "last_run": None, "error": None}
     background_tasks.add_task(_run_ingest_background)
     return {"status": "started"}
 

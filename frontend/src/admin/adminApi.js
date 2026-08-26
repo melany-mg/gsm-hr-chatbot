@@ -6,6 +6,7 @@ function authHeaders(token) {
 
 async function handleAuth(res) {
   if (res.status === 401) throw new Error('unauthorized')
+  if (!res.ok) throw new Error(`Server error: ${res.status}`)
   return res
 }
 
@@ -42,6 +43,7 @@ export async function uploadDocument(token, file) {
     headers: { Authorization: `Bearer ${token}` },
     body: form,
   })
+  if (res.status === 401) throw new Error('unauthorized')
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || 'Upload failed')
@@ -54,6 +56,7 @@ export async function deleteDocument(token, filename) {
     method: 'DELETE',
     headers: authHeaders(token),
   })
+  if (res.status === 401) throw new Error('unauthorized')
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || 'Delete failed')
@@ -66,6 +69,7 @@ export async function triggerIngest(token) {
     method: 'POST',
     headers: authHeaders(token),
   })
+  if (res.status === 401) throw new Error('unauthorized')
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || 'Ingest failed to start')
