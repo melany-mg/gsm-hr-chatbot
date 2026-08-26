@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # Claude (prod)
     anthropic_api_key: str = ""
     claude_model: str = "claude-haiku-4-5"
+    admin_password: str = ""
 
     # Qdrant — backend container uses Docker service name
     qdrant_host: str = "qdrant"
