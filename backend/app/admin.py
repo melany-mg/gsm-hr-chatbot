@@ -161,3 +161,32 @@ def delete_document(filename: str, _: None = Depends(require_auth)):
         raise HTTPException(status_code=404, detail="Document not found.")
     target.unlink()
     return {"deleted": filename}
+
+
+def _run_ingest_background() -> None:
+    global _ingest_status
+    _ingest_status = {"state": "running", "last_run": None, "error": None}
+    try:
+        from app.ingest import run_ingest
+        settings = get_settings()
+        run_ingest(qdrant_host=settings.qdrant_host)
+        _ingest_status = {
+            "state": "done",
+            "last_run": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "error": None,
+        }
+    except Exception as exc:
+        _ingest_status = {"state": "error", "last_run": None, "error": str(exc)}
+
+
+@router.post("/ingest")
+def trigger_ingest(background_tasks: BackgroundTasks, _: None = Depends(require_auth)):
+    if _ingest_status["state"] == "running":
+        raise HTTPException(status_code=409, detail="Ingest already running.")
+    background_tasks.add_task(_run_ingest_background)
+    return {"status": "started"}
+
+
+@router.get("/ingest/status")
+def get_ingest_status(_: None = Depends(require_auth)):
+    return _ingest_status

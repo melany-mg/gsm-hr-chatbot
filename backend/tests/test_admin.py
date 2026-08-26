@@ -152,3 +152,19 @@ def test_delete_last_document_blocked(tmp_path, monkeypatch):
         headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 400
+
+
+from unittest.mock import patch
+
+def test_ingest_status_default():
+    token = get_token()
+    res = client.get("/api/admin/ingest/status", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+    assert res.json()["state"] in ("idle", "done", "error")
+
+def test_trigger_ingest(monkeypatch):
+    token = get_token()
+    with patch("app.admin._run_ingest_background") as mock_ingest:
+        res = client.post("/api/admin/ingest", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+    assert res.json()["status"] == "started"
