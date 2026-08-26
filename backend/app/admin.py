@@ -20,6 +20,9 @@ _ingest_status: dict = {"state": "idle", "last_run": None, "error": None}
 DOCUMENTS_DIR = Path("/app/documents")
 CSV_PATH = Path("/app/logs/usage.csv")
 
+ALLOWED_SUFFIXES = {".pdf", ".docx", ".txt"}
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
+
 TOPICS = [
     ("PTO / Vacation", ["pto", "vacation", "time off", "days off", "accrual", "accrued"]),
     ("Benefits / Insurance", ["benefit", "insurance", "health", "dental", "vision", "medical", "coverage"]),
@@ -111,3 +114,50 @@ def get_analytics(_: None = Depends(require_auth)):
         "daily": daily_list,
         "topics": [{"topic": t, "count": topic_counts.get(t, 0)} for t, _ in TOPICS],
     }
+
+
+@router.get("/documents")
+def list_documents(_: None = Depends(require_auth)):
+    if not DOCUMENTS_DIR.exists():
+        return []
+    return [
+        {
+            "name": f.name,
+            "size": f.stat().st_size,
+            "modified": datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        for f in sorted(DOCUMENTS_DIR.iterdir())
+        if f.is_file() and f.suffix.lower() in ALLOWED_SUFFIXES
+    ]
+
+
+@router.post("/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    _: None = Depends(require_auth),
+):
+    if Path(file.filename).suffix.lower() not in ALLOWED_SUFFIXES:
+        raise HTTPException(status_code=400, detail="Only PDF, DOCX, and TXT files are allowed.")
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=400, detail="File exceeds 20 MB limit.")
+    dest = DOCUMENTS_DIR / Path(file.filename).name
+    dest.write_bytes(content)
+    return {"filename": dest.name, "size": len(content)}
+
+
+@router.delete("/documents/{filename}")
+def delete_document(filename: str, _: None = Depends(require_auth)):
+    if not DOCUMENTS_DIR.exists():
+        raise HTTPException(status_code=404, detail="Documents directory not found.")
+    existing = [f for f in DOCUMENTS_DIR.iterdir() if f.is_file() and f.suffix.lower() in ALLOWED_SUFFIXES]
+    if len(existing) <= 1:
+        raise HTTPException(status_code=400, detail="Cannot delete the last document.")
+    target = DOCUMENTS_DIR / filename
+    # Guard against path traversal
+    if not target.resolve().is_relative_to(DOCUMENTS_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+    if not target.exists() or not target.is_file():
+        raise HTTPException(status_code=404, detail="Document not found.")
+    target.unlink()
+    return {"deleted": filename}

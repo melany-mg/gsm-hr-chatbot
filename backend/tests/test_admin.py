@@ -93,3 +93,62 @@ def test_analytics_topic_classification(tmp_path, monkeypatch):
     assert topics["PTO / Vacation"] == 1
     assert topics["Holidays"] == 1
     assert topics["Pay / Payroll"] == 1
+
+
+import io
+
+def test_list_documents(tmp_path, monkeypatch):
+    (tmp_path / "test.pdf").write_bytes(b"%PDF fake")
+    (tmp_path / "notes.txt").write_text("hello")
+    (tmp_path / "ignore.xyz").write_text("skip me")
+    monkeypatch.setattr("app.admin.DOCUMENTS_DIR", tmp_path)
+    token = get_token()
+    res = client.get("/api/admin/documents", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+    names = [f["name"] for f in res.json()]
+    assert "test.pdf" in names
+    assert "notes.txt" in names
+    assert "ignore.xyz" not in names
+
+def test_upload_pdf(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.admin.DOCUMENTS_DIR", tmp_path)
+    token = get_token()
+    res = client.post(
+        "/api/admin/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("policy.pdf", b"%PDF content", "application/pdf")},
+    )
+    assert res.status_code == 200
+    assert (tmp_path / "policy.pdf").exists()
+
+def test_upload_invalid_type(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.admin.DOCUMENTS_DIR", tmp_path)
+    token = get_token()
+    res = client.post(
+        "/api/admin/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("virus.exe", b"bad", "application/octet-stream")},
+    )
+    assert res.status_code == 400
+
+def test_delete_document(tmp_path, monkeypatch):
+    (tmp_path / "old.pdf").write_bytes(b"%PDF fake")
+    (tmp_path / "keep.pdf").write_bytes(b"%PDF keep")
+    monkeypatch.setattr("app.admin.DOCUMENTS_DIR", tmp_path)
+    token = get_token()
+    res = client.delete(
+        "/api/admin/documents/old.pdf",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    assert not (tmp_path / "old.pdf").exists()
+
+def test_delete_last_document_blocked(tmp_path, monkeypatch):
+    (tmp_path / "only.pdf").write_bytes(b"%PDF only")
+    monkeypatch.setattr("app.admin.DOCUMENTS_DIR", tmp_path)
+    token = get_token()
+    res = client.delete(
+        "/api/admin/documents/only.pdf",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 400
