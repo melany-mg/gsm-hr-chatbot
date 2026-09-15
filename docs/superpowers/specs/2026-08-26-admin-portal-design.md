@@ -129,16 +129,34 @@ Token is checked on `AdminApp` mount. If absent, Login is shown. On successful l
 
 ---
 
+## Security Constraints
+
+These requirements were enforced during implementation and apply to any future changes:
+
+- **Empty-password guard:** `/api/admin/login` returns 503 if `ADMIN_PASSWORD` is not set in the environment. This prevents open access on misconfigured deployments.
+- **Chunked upload:** `POST /api/admin/upload` reads the file in 64 KB chunks and aborts mid-stream if the size exceeds 20 MB. The full body is never buffered into memory before the size check.
+- **Ingest race prevention:** `POST /api/admin/ingest` acquires a `threading.Lock` before checking and setting the `"running"` state. This prevents two concurrent requests from both passing the 409 guard and starting overlapping ingest runs.
+- **Consistent 401 handling:** All admin API calls in `adminApi.js` throw the string `'unauthorized'` (not a generic error) on a 401 response, which triggers an automatic logout and return to the login screen.
+- **Non-ok response handling:** `handleAuth()` also throws on any non-2xx response (not only 401), preventing error payloads from being silently treated as valid data.
+- **Token comparison:** Token and password comparisons use `secrets.compare_digest` to avoid timing attacks.
+- **Path traversal prevention:** Delete endpoint resolves the target path and verifies it is within `DOCUMENTS_DIR` before deleting.
+
+---
+
 ## Files Changed
 
 **Backend:**
 - `backend/app/admin.py` — new file, all admin endpoints and ingest logic
+- `backend/app/config.py` — `admin_password` field added to `Settings`
+- `backend/app/ingest.py` — `run_ingest()` accepts optional `qdrant_host` parameter
 - `backend/app/main.py` — register admin router
+- `backend/requirements.txt` — `python-multipart>=0.0.5` added (required for `UploadFile`)
+- `backend/tests/test_admin.py` — 15 backend tests
 
 **Frontend:**
 - `frontend/src/main.jsx` — pathname-based routing
-- `frontend/src/admin/` — new directory with 5 new files
+- `frontend/src/admin/` — new directory: `adminApi.js`, `admin.css`, `Login.jsx`, `Analytics.jsx`, `LogViewer.jsx`, `Documents.jsx`, `AdminApp.jsx`
 
 **Infrastructure:**
-- `frontend/nginx.conf` (or Dockerfile) — verify SPA fallback serves `/admin`
-- `.env` — add `ADMIN_PASSWORD` (server `.env` only, never committed)
+- `.env.example` — `ADMIN_PASSWORD=` entry added
+- `.env` — add `ADMIN_PASSWORD` on server only, never committed
