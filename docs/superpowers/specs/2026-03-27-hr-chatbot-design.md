@@ -34,12 +34,18 @@ HR Chatbot/
 │   │   ├── main.py          # FastAPI entrypoint
 │   │   ├── chat.py          # RAG + LLM logic
 │   │   ├── ingest.py        # Manual ingestion script
+│   │   ├── admin.py         # Admin portal API endpoints
 │   │   └── config.py        # Reads .env, exposes settings
-│   ├── documents/           # Drop HR PDFs/DOCXs here
+│   ├── tests/
+│   │   ├── test_admin.py    # Admin endpoint tests
+│   │   └── test_ingest.py
+│   ├── documents/           # HR PDFs/DOCXs (manageable via admin portal)
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
+│   │   ├── admin/           # Admin portal React components
+│   │   └── ...              # Employee chatbot components
 │   ├── public/
 │   ├── package.json
 │   └── Dockerfile
@@ -54,8 +60,11 @@ HR Chatbot/
 ## 3. Document Ingestion Pipeline
 
 ### Trigger
-Manually run: `python backend/app/ingest.py`
-Run after dropping files into `backend/documents/`. Each run wipes and rebuilds the Qdrant collection from scratch.
+Can be triggered two ways:
+- **Manually** on the host: `python backend/app/ingest.py`
+- **Via admin portal:** clicking "Update Chatbot" in the Documents tab calls `POST /api/admin/ingest`, which runs ingest as a background task inside the backend container
+
+Each run wipes and rebuilds the Qdrant collection from scratch.
 
 ### Supported File Types
 - `.pdf` — parsed with `pdfplumber`
@@ -92,6 +101,8 @@ Run after dropping files into `backend/documents/`. Each run wipes and rebuilds 
 | POST   | `/api/chat`  | Send message, get answer |
 | GET    | `/api/health`| Health check             |
 
+Admin endpoints are documented separately in the admin portal design spec (`docs/superpowers/specs/2026-08-26-admin-portal-design.md`).
+
 ### Request / Response
 
 ```json
@@ -114,7 +125,7 @@ Run after dropping files into `backend/documents/`. Each run wipes and rebuilds 
 }
 ```
 
-`history` is sent from the frontend on every turn. The backend is fully stateless — no sessions stored server-side.
+`history` is sent from the frontend on every turn. The backend is stateless with respect to conversation state — no session data is stored server-side for the purpose of continuing a conversation. However, each interaction is logged to a CSV file for analytics (see Section 9 — Usage Logging).
 
 ### RAG Flow
 
@@ -198,6 +209,9 @@ QDRANT_EXTERNAL_HOST=localhost
 
 # Embedding
 EMBEDDING_MODEL=paraphrase-multilingual-mpnet-base-v2
+
+# Admin portal
+ADMIN_PASSWORD=your_password_here
 ```
 
 ### .env.example (committed)
@@ -246,7 +260,27 @@ Language selection affects only the LLM response language via the system prompt.
 ## 9. Key Constraints
 
 - **No hallucinations:** LLM must only answer from retrieved context. No outside knowledge.
-- **No user data stored:** Sessions are stateless. No conversation history persisted.
+- **Conversation state is not persisted:** The backend holds no session state between requests — `history` is sent by the frontend on every turn.
+- **Usage is logged:** Each interaction is appended to `/app/logs/usage.csv` inside the backend container. Columns: Timestamp, Session ID, Question, Answer, Outcome (answered/redirected), Language. This log is readable via the admin portal and is the only employee data stored.
 - **Single embedding model:** `paraphrase-multilingual-mpnet-base-v2` used in both dev and prod — vectors remain consistent.
-- **Manual re-indexing:** Documents are not auto-indexed. Each ingest run wipes and rebuilds from scratch.
+- **Re-indexing wipes and rebuilds:** Each ingest run deletes and recreates the Qdrant collection from scratch. Can be triggered manually or via the admin portal.
 - **Citations required:** Every answer must include source document name and page number.
+
+---
+
+## 10. Usage Logging
+
+Each call to `POST /api/chat` appends one row to `/app/logs/usage.csv` (mounted as a Docker volume so data persists across container restarts).
+
+| Column | Description |
+|--------|-------------|
+| Timestamp | ISO datetime of the request |
+| Session ID | Anonymous per-browser-session identifier (stored in `sessionStorage`) |
+| Question | The employee's message |
+| Answer | The chatbot's response |
+| Outcome | `answered` if the LLM found relevant context; `redirected` if it defaulted to the HR redirect message |
+| Language | Language code (`en`, `es`, `ps`, `fa`, `bs`) |
+
+No names, employee IDs, or personally identifiable information are collected. The session ID is a random value generated in the browser for the duration of a single browser tab session — it resets on page reload.
+
+The admin portal reads this CSV to display Chat History and Analytics.
