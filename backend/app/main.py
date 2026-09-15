@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from app.config import get_settings
 from app.chat import answer_question, build_embeddings, get_qdrant_client
+from app.admin import router as admin_router
 
 LOGS_DIR = Path("/app/logs")
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -47,6 +48,7 @@ def _migrate_csv() -> None:
 _migrate_csv()
 
 app = FastAPI(title="GSM HR Chatbot API")
+app.include_router(admin_router)
 
 app.add_middleware(
     CORSMiddleware,

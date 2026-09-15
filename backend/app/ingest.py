@@ -9,6 +9,7 @@ docker compose exec -e QDRANT_EXTERNAL_HOST=qdrant backend python app/ingest.py 
 """
 import sys
 from pathlib import Path
+from typing import Optional
 
 # Allow running as a script: adds backend/ to sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -27,10 +28,10 @@ DOCUMENTS_DIR = Path(__file__).parent.parent / "documents"
 VECTOR_SIZE = 768  # paraphrase-multilingual-mpnet-base-v2 output dimension
 
 
-def run_ingest() -> None:
+def run_ingest(qdrant_host: Optional[str] = None) -> None:
     settings = get_settings()
-
-    client = QdrantClient(host=settings.qdrant_external_host, port=settings.qdrant_port)
+    host = qdrant_host if qdrant_host is not None else settings.qdrant_external_host
+    client = QdrantClient(host=host, port=settings.qdrant_port)
     model = SentenceTransformer(settings.embedding_model)
     splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=150)
 
