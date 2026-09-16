@@ -100,7 +100,15 @@ def get_analytics(_: None = Depends(require_auth)):
     for r in rows:
         ts = r.get("Timestamp", "")
         if ts:
-            daily[ts[:10]] += 1
+            try:
+                # Handle both ISO (2026-08-19) and M/D/YYYY (8/19/2026 12:08) formats
+                if "/" in ts:
+                    parsed = datetime.strptime(ts.strip(), "%m/%d/%Y %H:%M")
+                else:
+                    parsed = datetime.fromisoformat(ts[:16])
+                daily[parsed.date().isoformat()] += 1
+            except ValueError:
+                pass
 
     today = date.today()
     daily_list = [
