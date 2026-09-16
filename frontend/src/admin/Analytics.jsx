@@ -78,14 +78,11 @@ export default function Analytics({ token, onUnauthorized }) {
                   {daily.map(d => {
                     const pct = d.count / maxDay
                     return (
-                      <div
-                        className="bar-col"
-                        key={d.date}
-                        data-tooltip={`${d.date}: ${d.count} question${d.count !== 1 ? 's' : ''}`}
-                      >
+                      <div className="bar-col" key={d.date}>
                         <div
                           className={`bar ${d.count === maxDay && maxDay > 0 ? 'peak' : pct > 0.7 ? 'hi' : ''}`}
                           style={{ height: `${Math.max(pct * 100, d.count > 0 ? 3 : 0)}%` }}
+                          data-tooltip={`${d.date}: ${d.count} question${d.count !== 1 ? 's' : ''}`}
                         />
                       </div>
                     )
