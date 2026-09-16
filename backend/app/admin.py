@@ -120,10 +120,29 @@ def get_analytics(_: None = Depends(require_auth)):
     for r in rows:
         topic_counts[classify_topic(r.get("Question", ""))] += 1
 
+    lang_names = {"en": "English", "es": "Español", "ps": "پښتو", "fa": "دری", "bs": "Bosanski"}
+    lang_counts: dict[str, int] = defaultdict(int)
+    for r in rows:
+        lang = (r.get("Language", "en") or "en").lower()
+        lang_counts[lang] += 1
+    languages = [{"code": c, "name": n, "count": lang_counts.get(c, 0)} for c, n in lang_names.items()]
+
+    recent = [
+        {
+            "timestamp": r.get("Timestamp", ""),
+            "question": r.get("Question", ""),
+            "outcome": r.get("Outcome", ""),
+            "language": r.get("Language", "en"),
+        }
+        for r in reversed(rows[-5:])
+    ]
+
     return {
         "totals": {"total": total, "sessions": sessions, "answered": answered, "redirected": redirected},
         "daily": daily_list,
         "topics": [{"topic": t, "count": topic_counts.get(t, 0)} for t, _ in TOPICS],
+        "languages": languages,
+        "recent": recent,
     }
 
 
