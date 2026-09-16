@@ -34,7 +34,7 @@ export default function Analytics({ token, onUnauthorized }) {
         </div>
       </div>
 
-      <div className="a-stats a-stats-5">
+      <div className="a-stats">
         <div className="a-stat hl">
           <div className="a-stat-label">Total Questions</div>
           <div className="a-stat-value">{totals.total}</div>
@@ -57,14 +57,10 @@ export default function Analytics({ token, onUnauthorized }) {
           <div className="a-stat-value">{redirectedPct}%</div>
           <div className="a-stat-sub">{totals.redirected} of {totals.total}</div>
         </div>
-        <div className="a-stat">
-          <div className="a-stat-label">Most Asked Topic</div>
-          <div className="a-stat-value a-stat-value-sm">{topTopic.topic}</div>
-          <div className="a-stat-sub">{topTopic.count} questions</div>
-        </div>
       </div>
 
-      <div className="a-content-row">
+      <div className="a-analytics-grid">
+        {/* Row 1: Chart + Topics */}
         <div className="a-card">
           <div className="a-card-head">
             <span className="a-card-title">Questions per day</span>
@@ -110,6 +106,13 @@ export default function Analytics({ token, onUnauthorized }) {
             <span className="a-card-title">Topics</span>
             <span className="a-card-meta">All time</span>
           </div>
+          {topTopic.count > 0 && (
+            <div className="a-top-topic">
+              <span className="a-top-topic-label">Top topic</span>
+              <span className="a-top-topic-value">{topTopic.topic}</span>
+              <span className="a-top-topic-count">{topTopic.count} questions</span>
+            </div>
+          )}
           <div className="topic-list">
             {topics.map(t => (
               <div className="topic-row" key={t.topic}>
@@ -124,9 +127,8 @@ export default function Analytics({ token, onUnauthorized }) {
             ))}
           </div>
         </div>
-      </div>
 
-      <div className="a-bottom-row">
+        {/* Row 2: Recent Questions + Language */}
         <div className="a-card">
           <div className="a-card-head">
             <span className="a-card-title">Recent Questions</span>
@@ -148,7 +150,7 @@ export default function Analytics({ token, onUnauthorized }) {
                 ) : recent.map((r, i) => (
                   <tr key={i}>
                     <td className="a-meta" style={{ whiteSpace: 'nowrap' }}>{r.timestamp}</td>
-                    <td className="a-td-truncate" style={{ maxWidth: 340 }}>{r.question}</td>
+                    <td className="a-td-truncate" style={{ maxWidth: 280 }}>{r.question}</td>
                     <td><span className="pill answered" style={{ textTransform: 'uppercase', fontSize: 10 }}>{r.language || 'en'}</span></td>
                     <td><span className={`pill ${r.outcome}`}>{r.outcome}</span></td>
                   </tr>
