@@ -36,7 +36,7 @@
   background: var(--cream);
   color: var(--text-ink);
   min-height: 100vh;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -434,7 +434,7 @@
 }
 
 .a-stat-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -443,7 +443,7 @@
 }
 
 .a-stat-value {
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 700;
   color: var(--text-ink);
   font-variant-numeric: tabular-nums;
@@ -452,7 +452,7 @@
 }
 
 .a-stat-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-mid);
   margin-top: 6px;
 }
@@ -478,7 +478,7 @@
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* Top topic highlight inside Topics card */
@@ -530,14 +530,14 @@
 }
 
 .a-card-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-ink);
   letter-spacing: -0.01em;
 }
 
 .a-card-meta {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-light);
 }
 
@@ -558,13 +558,13 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 110px;
+  height: 180px;
   text-align: right;
   flex-shrink: 0;
 }
 
 .chart-yaxis span {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-light);
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -581,7 +581,7 @@
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  height: 110px;
+  height: 180px;
 }
 
 .bar-col {
@@ -638,7 +638,7 @@
 }
 
 .chart-x-labels span {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-light);
 }
 
@@ -663,13 +663,13 @@
 }
 
 .topic-name {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-ink);
   font-weight: 500;
 }
 
 .topic-count {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-mid);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -703,8 +703,8 @@
 
 .a-table th {
   text-align: left;
-  padding: 9px 14px;
-  font-size: 10px;
+  padding: 10px 14px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -715,10 +715,11 @@
 }
 
 .a-table td {
-  padding: 11px 14px;
+  padding: 13px 14px;
   border-bottom: 1px solid var(--border-2);
   color: var(--text-ink);
   vertical-align: top;
+  font-size: 14px;
 }
 
 .a-table tr:last-child td {
