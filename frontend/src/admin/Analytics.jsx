@@ -61,7 +61,7 @@ export default function Analytics({ token, onUnauthorized }) {
 
       <div className="a-analytics-grid">
         {/* Row 1: Chart + Topics */}
-        <div className="a-card">
+        <div className="a-card a-card-chart">
           <div className="a-card-head">
             <span className="a-card-title">Questions per day</span>
             <span className="a-card-meta">Last 30 days</span>

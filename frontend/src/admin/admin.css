@@ -522,6 +522,11 @@
   padding: 22px 24px;
 }
 
+.a-card-chart {
+  display: flex;
+  flex-direction: column;
+}
+
 .a-card-head {
   display: flex;
   align-items: center;
@@ -546,19 +551,20 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
 }
 
 .chart-with-yaxis {
   display: flex;
   gap: 10px;
-  align-items: flex-start;
+  align-items: stretch;
+  flex: 1;
 }
 
 .chart-yaxis {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 260px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -581,7 +587,7 @@
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  height: 260px;
+  flex: 1;
 }
 
 .bar-col {
