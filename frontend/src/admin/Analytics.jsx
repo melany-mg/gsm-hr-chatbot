@@ -132,7 +132,7 @@ export default function Analytics({ token, onUnauthorized }) {
         <div className="a-card">
           <div className="a-card-head">
             <span className="a-card-title">Recent Questions</span>
-            <span className="a-card-meta">Last 5</span>
+            <span className="a-card-meta">Last 3</span>
           </div>
           <div className="a-table-wrap">
             <table className="a-table">

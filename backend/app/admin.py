@@ -134,7 +134,7 @@ def get_analytics(_: None = Depends(require_auth)):
             "outcome": r.get("Outcome", ""),
             "language": r.get("Language", "en"),
         }
-        for r in reversed(rows[-5:])
+        for r in reversed(rows[-3:])
     ]
 
     return {
