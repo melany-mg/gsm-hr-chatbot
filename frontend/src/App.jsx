@@ -3,6 +3,7 @@ import LanguageDropdown from './components/LanguageDropdown'
 import ChatWindow from './components/ChatWindow'
 import InputBar from './components/InputBar'
 import { sendMessage } from './api'
+import logo from './assets/gsm-logo.png'
 import './App.css'
 
 export default function App() {
@@ -47,12 +48,29 @@ export default function App() {
 
   return (
     <div className="app">
-      <header>
-        <h1>GSM HR Assistant</h1>
-        <LanguageDropdown value={language} onChange={setLanguage} />
-      </header>
-      <ChatWindow messages={messages} loading={loading} />
-      <InputBar onSend={handleSend} disabled={loading} />
+      <div className="app-card">
+        <header>
+          <div className="header-logo">
+            <img className="header-logo-icon" src={logo} alt="GSM" />
+            <div className="header-logo-divider" />
+            <div className="header-logo-wordmark">
+              <span className="header-logo-name">General Stamping &amp; Metalworks</span>
+              <span className="header-logo-sub">HR Assistant</span>
+            </div>
+          </div>
+          <LanguageDropdown value={language} onChange={setLanguage} />
+        </header>
+
+        <div className="subheader">
+          <span className="status-dot" />
+          <span className="status-text">
+            Online &middot; Ask me about vacation, benefits, payroll, leave, and more
+          </span>
+        </div>
+
+        <ChatWindow messages={messages} loading={loading} />
+        <InputBar onSend={handleSend} disabled={loading} />
+      </div>
     </div>
   )
 }

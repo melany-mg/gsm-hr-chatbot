@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchDocuments, uploadDocument, deleteDocument, triggerIngest, fetchIngestStatus } from './adminApi'
 
 function formatBytes(b) {
@@ -92,13 +92,17 @@ export default function Documents({ token, onUnauthorized }) {
 
   return (
     <>
-      <div className="a-page-heading">Documents</div>
-      <div className="a-page-sub">Manage the HR documents the chatbot learns from</div>
+      <div className="a-section-head">
+        <div>
+          <div className="a-section-title">HR Documents</div>
+          <div className="a-section-sub">Manage the HR documents the chatbot learns from</div>
+        </div>
+      </div>
 
       <div className="a-card">
-        <div className="a-card-header">
-          <div className="a-card-title">Current Documents</div>
-          <div className="a-card-sub">{docs ? `${docs.length} file${docs.length !== 1 ? 's' : ''}` : '…'}</div>
+        <div className="a-card-head">
+          <span className="a-card-title">Current Documents</span>
+          <span className="a-card-meta">{docs ? `${docs.length} file${docs.length !== 1 ? 's' : ''}` : '…'}</span>
         </div>
 
         {docs && docs.map(f => (

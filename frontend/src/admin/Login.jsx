@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { adminLogin } from './adminApi'
+import logo from '../assets/gsm-logo.png'
 
 export default function Login({ onSuccess }) {
   const [password, setPassword] = useState('')
@@ -23,8 +24,14 @@ export default function Login({ onSuccess }) {
   return (
     <div className="a-login">
       <div className="a-login-card">
-        <div className="a-login-org">General Stamping &amp; Metalworks</div>
-        <div className="a-login-heading">HR Admin Portal</div>
+        <div className="a-login-logo">
+          <img src={logo} alt="GSM" />
+          <div className="a-login-logo-wordmark">
+            <span className="a-login-logo-name">General Stamping &amp; Metalworks</span>
+            <span className="a-login-logo-sub">HR Admin Portal</span>
+          </div>
+        </div>
+        <div className="a-login-heading">Sign in</div>
         <div className="a-login-sub">
           Sign in to manage documents, view chat history, and review analytics.
         </div>

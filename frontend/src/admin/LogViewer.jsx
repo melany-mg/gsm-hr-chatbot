@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchLogs } from './adminApi'
 
 export default function LogViewer({ token, onUnauthorized }) {
@@ -14,17 +14,21 @@ export default function LogViewer({ token, onUnauthorized }) {
       })
   }, [token])
 
-  if (error) return <div style={{ color: 'var(--a-text-2)', padding: 24 }}>{error}</div>
-  if (!rows) return <div style={{ color: 'var(--a-text-3)', padding: 24 }}>Loading…</div>
+  if (error) return <div style={{ color: 'var(--text-mid)', padding: 24 }}>{error}</div>
+  if (!rows) return <div style={{ color: 'var(--text-light)', padding: 24 }}>Loading…</div>
 
   return (
     <>
-      <div className="a-page-heading">Chat History</div>
-      <div className="a-page-sub">Every question asked, newest first</div>
+      <div className="a-section-head">
+        <div>
+          <div className="a-section-title">Chat History</div>
+          <div className="a-section-sub">Every question asked, newest first</div>
+        </div>
+      </div>
 
       <div className="a-card">
         {rows.length === 0 ? (
-          <div style={{ padding: 24, color: 'var(--a-text-3)' }}>No questions logged yet.</div>
+          <div style={{ color: 'var(--text-light)' }}>No questions logged yet.</div>
         ) : (
           <div className="a-table-wrap">
             <table className="a-table">
@@ -42,13 +46,13 @@ export default function LogViewer({ token, onUnauthorized }) {
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={i}>
-                    <td style={{ whiteSpace: 'nowrap', color: 'var(--a-text-2)' }}>{r['Timestamp']}</td>
+                    <td style={{ whiteSpace: 'nowrap', color: 'var(--text-mid)' }}>{r['Timestamp']}</td>
                     <td className="a-meta">{r['Session ID'] ? r['Session ID'].slice(0, 8) + '…' : '—'}</td>
                     <td style={{ textTransform: 'uppercase' }}>{r['Language']}</td>
                     <td className="a-td-truncate" title={r['Question']}>{r['Question']}</td>
                     <td className="a-td-truncate" title={r['Answer']}>{r['Answer']}</td>
                     <td>
-                      <span className={`a-badge ${r['Outcome'] === 'answered' ? 'a-badge-green' : 'a-badge-amber'}`}>
+                      <span className={`pill ${r['Outcome'] === 'answered' ? 'answered' : 'redirected'}`}>
                         {r['Outcome']}
                       </span>
                     </td>

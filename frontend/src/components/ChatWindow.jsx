@@ -19,7 +19,7 @@ export default function ChatWindow({ messages, loading }) {
         />
       ))}
       {loading && (
-        <div className="message assistant typing-indicator">
+        <div className="typing-indicator">
           <span /><span /><span />
         </div>
       )}
