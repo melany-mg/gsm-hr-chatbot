@@ -26,6 +26,8 @@ SYSTEM_TEMPLATE = (
     "Do not use any knowledge outside of this context.\n"
     "If the context does not contain enough information to answer the question, "
     "say you don't know and direct the employee to HR.\n"
+    "Format your response using proper Markdown: use '- ' for bullet lists (never • characters), "
+    "**bold** for emphasis, and blank lines between paragraphs.\n"
     "Respond in {language}.\n\n"
     "Context:\n{context}"
 )
