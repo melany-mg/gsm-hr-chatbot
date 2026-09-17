@@ -1,9 +1,61 @@
 import { useEffect, useState } from 'react'
-import { fetchAnalytics } from './adminApi'
+import { fetchAnalytics, fetchLogs } from './adminApi'
+
+const TOPIC_KEYWORDS = [
+  ["PTO / Vacation", ["pto", "vacation", "time off", "days off", "accrual", "accrued"]],
+  ["Benefits / Insurance", ["benefit", "insurance", "health", "dental", "vision", "medical", "coverage"]],
+  ["FMLA / Leave", ["fmla", "leave", "maternity", "paternity", "family leave", "medical leave"]],
+  ["Bereavement", ["bereavement", "funeral", "death", "passing"]],
+  ["Holidays", ["holiday", "christmas", "thanksgiving", "labor day", "memorial day", "new year"]],
+  ["Pay / Payroll", ["pay", "payroll", "salary", "wage", "overtime", "direct deposit"]],
+  ["Conduct / Policy", ["conduct", "policy", "disciplinary", "harassment", "code of conduct"]],
+]
+
+function classifyTopic(question) {
+  const q = (question || '').toLowerCase()
+  for (const [topic, keywords] of TOPIC_KEYWORDS) {
+    if (keywords.some(kw => q.includes(kw))) return topic
+  }
+  return "Other"
+}
+
+function TopicModal({ topic, logs, onClose }) {
+  const filtered = logs.filter(r => classifyTopic(r['Question']) === topic)
+  return (
+    <div className="a-modal-overlay" onClick={onClose}>
+      <div className="a-modal a-modal-wide" onClick={e => e.stopPropagation()}>
+        <div className="a-modal-head">
+          <div className="a-modal-title">{topic} <span style={{ color: 'var(--text-light)', fontWeight: 400, fontSize: 14 }}>— {filtered.length} question{filtered.length !== 1 ? 's' : ''}</span></div>
+          <button className="a-modal-close" onClick={onClose}>✕</button>
+        </div>
+        {filtered.length === 0 ? (
+          <div style={{ color: 'var(--text-light)', padding: '12px 0' }}>No questions for this topic.</div>
+        ) : (
+          <div className="a-modal-list">
+            {filtered.map((r, i) => (
+              <div key={i} className="a-modal-list-item">
+                <div className="a-modal-list-meta">
+                  <span style={{ color: 'var(--text-light)', fontSize: 12 }}>{r['Timestamp']}</span>
+                  <span className={`pill ${r['Outcome'] === 'answered' ? 'answered' : 'redirected'}`}>{r['Outcome']}</span>
+                </div>
+                <div className="a-modal-section-label" style={{ marginTop: 8 }}>Question</div>
+                <div className="a-modal-body-text">{r['Question'] || '—'}</div>
+                <div className="a-modal-section-label" style={{ marginTop: 10 }}>Answer</div>
+                <div className="a-modal-body-text">{r['Answer'] || '—'}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function Analytics({ token, onUnauthorized }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
+  const [selectedTopic, setSelectedTopic] = useState(null)
+  const [allLogs, setAllLogs] = useState(null)
 
   useEffect(() => {
     fetchAnalytics(token)
@@ -13,6 +65,15 @@ export default function Analytics({ token, onUnauthorized }) {
         else setError('Failed to load analytics.')
       })
   }, [token])
+
+  function handleTopicClick(topicName) {
+    setSelectedTopic(topicName)
+    if (!allLogs) {
+      fetchLogs(token)
+        .then(setAllLogs)
+        .catch(() => setAllLogs([]))
+    }
+  }
 
   if (error) return <div style={{ color: 'var(--text-mid)', padding: 24 }}>{error}</div>
   if (!data) return <div style={{ color: 'var(--text-light)', padding: 24 }}>Loading…</div>
@@ -27,6 +88,20 @@ export default function Analytics({ token, onUnauthorized }) {
 
   return (
     <>
+      {selectedTopic && allLogs && (
+        <TopicModal topic={selectedTopic} logs={allLogs} onClose={() => setSelectedTopic(null)} />
+      )}
+      {selectedTopic && !allLogs && (
+        <div className="a-modal-overlay" onClick={() => setSelectedTopic(null)}>
+          <div className="a-modal" onClick={e => e.stopPropagation()}>
+            <div className="a-modal-head">
+              <div className="a-modal-title">{selectedTopic}</div>
+              <button className="a-modal-close" onClick={() => setSelectedTopic(null)}>✕</button>
+            </div>
+            <div style={{ color: 'var(--text-light)', padding: '12px 0' }}>Loading…</div>
+          </div>
+        </div>
+      )}
       <div className="a-section-head">
         <div>
           <div className="a-section-title">Analytics</div>
@@ -112,7 +187,12 @@ export default function Analytics({ token, onUnauthorized }) {
           )}
           <div className="topic-list">
             {topics.map(t => (
-              <div className="topic-row" key={t.topic}>
+              <div
+                className={`topic-row topic-row-clickable${t.count === 0 ? ' topic-row-empty' : ''}`}
+                key={t.topic}
+                onClick={() => t.count > 0 && handleTopicClick(t.topic)}
+                title={t.count > 0 ? `View ${t.count} question${t.count !== 1 ? 's' : ''} in ${t.topic}` : undefined}
+              >
                 <div className="topic-meta">
                   <span className="topic-name">{t.topic}</span>
                   <span className="topic-count">{t.count}</span>
