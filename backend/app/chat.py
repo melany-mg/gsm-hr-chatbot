@@ -5,7 +5,7 @@ from qdrant_client import QdrantClient
 
 from app.config import Settings
 
-SIMILARITY_THRESHOLD = 0.3
+SIMILARITY_THRESHOLD = 0.25
 
 HR_REDIRECT = (
     "I'm sorry, I don't have information about that in the HR documents. "
@@ -62,7 +62,7 @@ def retrieve_chunks(
         collection_name=settings.qdrant_collection,
         embedding=embeddings,
     )
-    return store.similarity_search_with_score(query, k=12)
+    return store.similarity_search_with_score(query, k=25)
 
 
 def answer_question(
